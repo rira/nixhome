@@ -47,9 +47,6 @@
         # MacBook Pro 13" (2020)
         macbook-2020 = mkHost {
           name = "macbook-2020";
-          extraModules = [
-            nixos-hardware.nixosModules.apple-macbook-pro-16-1
-          ];
         };
       };
     };
