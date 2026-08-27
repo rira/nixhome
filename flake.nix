@@ -53,6 +53,11 @@
         macmini-2012 = mkHost {
           name = "macmini-2012";
         };
+
+        # iMac 2015 (Retina GNOME Workstation)
+        imac-2015 = mkHost {
+          name = "imac-2015";
+        };
       };
     };
 }
