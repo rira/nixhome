@@ -4,10 +4,10 @@
   base.enable = true;
   nixpkgs.config.allowUnfree = true;
 
-  # Target disk for internal drive
+  # Target SATA disk
   diskConfig.device = "/dev/sda";
 
-  # Features
+  # Child kiosk setup
   features.kiosk.enable = true;
   features.streaming.enable = true;
 
@@ -27,16 +27,16 @@
   systemd.targets.sleep.enable = false;
   systemd.targets.suspend.enable = false;
 
-  # Local user for child kiosk
-  users.users.barn = {
+  # Primary kiosk user with autologin
+  users.users.leo = {
     isNormalUser = true;
-    description = "Barn";
-    initialPassword = "barn";
+    description = "Leo";
+    initialPassword = "changeme";
     extraGroups = [ "video" "audio" "input" ];
   };
 
   services.displayManager.autoLogin = {
     enable = true;
-    user = "barn";
+    user = "leo";
   };
 }
