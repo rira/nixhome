@@ -83,13 +83,17 @@ in
 
       "battery" = {
         states = {
+          good = 95;
           warning = 30;
           critical = 15;
         };
         format = "{icon} {capacity}%";
         format-charging = " {capacity}%";
         format-plugged = " {capacity}%";
-        format-icons = [ "" "" "" "" "" ];
+        format-alt = "{icon} {capacity}% ({time})";
+        format-icons = [ "󰁺" "󰁼" "󰁾" "󰂀" "󰂂" ];
+        tooltip-format = "{timeTo}\nPower draw: {power}W\nHealth: {health}%";
+        interval = 5;
       };
 
       "network" = {
@@ -180,6 +184,11 @@ in
 
       #battery.critical {
         color: #f38ba8;
+      }
+
+      #battery.charging,
+      #battery.plugged {
+        color: #94e2d5;
       }
 
       #pulseaudio {
