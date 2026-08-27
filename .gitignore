@@ -1,0 +1,8 @@
+result
+result-*
+*.env
+secrets/
+/var/secrets/
+*.qcow2
+result
+result-*
