@@ -7,7 +7,7 @@
   # Target disk for internal drive
   diskConfig.device = "/dev/sda";
 
-  # Child kiosk setup: autostart streaming / media interface
+  # Features
   features.kiosk.enable = true;
   features.streaming.enable = true;
 
@@ -26,4 +26,17 @@
   # Prevent screen lock or suspension during use
   systemd.targets.sleep.enable = false;
   systemd.targets.suspend.enable = false;
+
+  # Local user for child kiosk
+  users.users.barn = {
+    isNormalUser = true;
+    description = "Barn";
+    initialPassword = "barn";
+    extraGroups = [ "video" "audio" "input" ];
+  };
+
+  services.displayManager.autoLogin = {
+    enable = true;
+    user = "barn";
+  };
 }

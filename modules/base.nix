@@ -8,11 +8,6 @@ in
     enable = lib.mkEnableOption "Core system baseline configuration" // {
       default = true;
     };
-    adminUser = lib.mkOption {
-      type = lib.types.str;
-      default = "admin";
-      description = "Primary administrator account username";
-    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -21,41 +16,41 @@ in
     networking.hostName = hostName;
     networking.networkmanager.enable = true;
 
-    # Tidszon och lokalisering
+    # Timezone & Localization
     time.timeZone = "Europe/Stockholm";
     i18n.defaultLocale = "en_US.UTF-8";
 
-    # Tangentbordslayout
+    # Keyboard layout
     services.xserver.xkb = {
       layout = "se";
       variant = "";
     };
     console.keyMap = "sv-latin1";
 
-    # Flakes & Store-optimering
+    # Flakes & Store optimization
     nix.settings = {
       experimental-features = [ "nix-command" "flakes" ];
       auto-optimise-store = true;
     };
 
-    # Automatisk städning
+    # Garbage collection
     nix.gc = {
       automatic = true;
       dates = "weekly";
       options = "--delete-older-than 14d";
     };
 
-    # Automatiska systemuppdateringar
+    # Automatic system upgrades
     system.autoUpgrade = {
       enable = true;
-      flake = "github:your-github-username/nixos-config#${hostName}";
+      flake = "github:rira/nixhome#${hostName}";
       operation = "boot";
       persistent = true;
       dates = "04:00";
       randomizedDelaySec = "45min";
     };
 
-    # Tailscale mesh-VPN
+    # Tailscale mesh VPN
     services.tailscale = {
       enable = true;
       useRoutingFeatures = "client";
@@ -78,26 +73,37 @@ in
       '';
     };
 
-    # Administratörskonto & Zsh
-    users.users.${cfg.adminUser} = {
-      isNormalUser = true;
-      initialPassword = "admin";
-      extraGroups = [ "wheel" "networkmanager" "video" "audio" ];
-      shell = pkgs.zsh;
+    # SSH remote management
+    services.openssh = {
+      enable = true;
+      settings = {
+        PasswordAuthentication = false;
+        KbdInteractiveAuthentication = false;
+      };
     };
 
-    # Skapa bash/zsh-filer automatiskt så förstagångsguiden aldrig startar
-    systemd.tmpfiles.rules = [
-      "f /home/${cfg.adminUser}/.zshrc 0644 ${cfg.adminUser} users - -"
-    ] ++ lib.optional (inputs ? dotfiles) "L+ /home/${cfg.adminUser}/.config - - - - ${inputs.dotfiles}/.config";
+    # Universal Fleet Administrator Account
+    users.users.richard = {
+      isNormalUser = true;
+      description = "Fleet Administrator";
+      initialPassword = "changeme";
+      extraGroups = [ "wheel" "networkmanager" "video" "audio" "input" ];
+      shell = pkgs.zsh;
+      openssh.authorizedKeys.keys = [
+        # Lägg till din publika SSH-nyckel här
+      ];
+    };
 
+    # Passwordless sudo for admin tasks
+    security.sudo.wheelNeedsPassword = false;
+
+    # System-wide shell setup
     programs.zsh = {
       enable = true;
       enableCompletion = true;
       autosuggestions.enable = true;
       syntaxHighlighting.enable = true;
       histSize = 10000;
-      histFile = "$HOME/.zsh_history";
       setOptions = [
         "HIST_IGNORE_ALL_DUPS"
         "HIST_FIND_NO_DUPS"
@@ -132,7 +138,7 @@ in
     boot.loader.systemd-boot.enable = true;
     boot.loader.efi.canTouchEfiVariables = true;
 
-    # CLI-baspaket
+    # Base CLI packages
     environment.systemPackages = with pkgs; [
       git
       curl

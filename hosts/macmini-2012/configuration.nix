@@ -7,7 +7,7 @@
   # Target disk for internal SATA SSD
   diskConfig.device = "/dev/sda";
 
-  # Enable streaming and kiosk features
+  # Features
   features.streaming.enable = true;
   features.kiosk.enable = true;
 
@@ -23,9 +23,22 @@
   # Allow proprietary firmware for Broadcom Wi-Fi / Bluetooth
   hardware.enableRedistributableFirmware = true;
 
-  # Prevent the machine from sleeping while acting as a streaming receiver
+  # Prevent machine from sleeping during streaming sessions
   systemd.targets.sleep.enable = false;
   systemd.targets.suspend.enable = false;
   systemd.targets.hibernate.enable = false;
   systemd.targets.hybrid-sleep.enable = false;
+
+  # Local user for TV/Media
+  users.users.media = {
+    isNormalUser = true;
+    description = "Media Center";
+    initialPassword = "media";
+    extraGroups = [ "video" "audio" "input" ];
+  };
+
+  services.displayManager.autoLogin = {
+    enable = true;
+    user = "media";
+  };
 }
