@@ -60,6 +60,9 @@ in
       randomizedDelaySec = "45min";
     };
 
+    # Thunderbolt device management daemon (for Thunderbolt 4 docks & peripherals)
+    services.hardware.bolt.enable = true;
+
     # Tailscale mesh VPN
     services.tailscale = {
       enable = true;
