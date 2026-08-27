@@ -1,32 +1,25 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   cfg = config.features.streaming;
 in
 {
   options.features.streaming = {
-    enable = lib.mkEnableOption "Moonlight game streaming client and low-latency audio stack";
+    enable = lib.mkEnableOption "Streaming and pro-audio processing suite";
   };
 
   config = lib.mkIf cfg.enable {
-    # Hardware video decoding acceleration (VA-API / Intel QuickSync)
-    hardware.graphics = {
-      enable = true;
-      extraPackages = with pkgs; [
-        intel-media-driver   # Broadwell and newer (EliteBook, iMac 2015, MacBook 2020)
-        intel-vaapi-driver   # Ivy Bridge and Haswell (Mac Mini 2012)
-        libvdpau-va-gl
-      ];
-    };
-
-    # Low-latency PipeWire audio stack with real-time priority
-    security.rtkit.enable = true;
-    services.pipewire = {
-      enable = true;
-      alsa.enable = true;
-      pulse.enable = true;
-    };
-
-    environment.systemPackages = [ pkgs.moonlight-qt ];
+    # Packages for mic processing, DSP routing, and broadcast
+    environment.systemPackages = with pkgs; [
+      easyeffects   # DSP effects (noise gate, compressor, EQ for Elgato Wave XLR)
+      qpwgraph      # Visual PipeWire patchbay for audio routing
+      obs-studio    # Video recording and live streaming
+      pavucontrol   # PulseAudio/PipeWire volume control interface
+    ];
   };
 }

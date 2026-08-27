@@ -1,8 +1,25 @@
+# Nix build artifacts and symlinks
 result
 result-*
-*.env
-secrets/
-/var/secrets/
+
+# QEMU and VM disk images
 *.qcow2
-result
-result-*
+*.img
+*.iso
+
+# Direnv & nix-direnv caches
+.direnv/
+
+# Editor and IDE metadata
+.vscode/
+.idea/
+*.swp
+*~
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Optional: Local unencrypted secrets or temporary keys (keep real SOPS keys private)
+*.key
+*.priv

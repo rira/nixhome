@@ -10,11 +10,22 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixos-hardware, disko, ... }@inputs:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      nixos-hardware,
+      disko,
+      ...
+    }@inputs:
     let
       system = "x86_64-linux";
 
-      mkHost = { name, extraModules ? [] }:
+      mkHost =
+        {
+          name,
+          extraModules ? [ ],
+        }:
         nixpkgs.lib.nixosSystem {
           inherit system;
           specialArgs = {
@@ -29,12 +40,14 @@
             ./modules/apps.nix
             ./modules/profiles.nix
             ./modules/hyprland.nix
+            ./modules/waybar.nix
             ./modules/gnome.nix
             ./modules/streaming.nix
             ./modules/kiosk.nix
             ./modules/apple-legacy.nix
             ./hosts/${name}/configuration.nix
-          ] ++ extraModules;
+          ]
+          ++ extraModules;
         };
     in
     {
