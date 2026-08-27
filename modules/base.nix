@@ -66,6 +66,20 @@ in
       useRoutingFeatures = "client";
     };
 
+    # Create /var/secrets automatically for richard
+    systemd.tmpfiles.rules = [
+      "d /var/secrets 0750 richard wheel -"
+    ];
+
+    # Trigger autoconnect-service when secrets.env gets created/updated through SCP
+    systemd.paths.tailscale-autoconnect = {
+      description = "Watch for Tailscale secrets file";
+      wantedBy = [ "multi-user.target" ];
+      pathConfig = {
+        PathExists = "/var/secrets/secrets.env";
+      };
+    };
+
     systemd.services.tailscale-autoconnect = {
       description = "Tailscale automatic authentication";
       after = [
