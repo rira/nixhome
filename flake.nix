@@ -39,14 +39,19 @@
     in
     {
       nixosConfigurations = {
-        # HP EliteBook x360
+        # HP EliteBook x360 (Hyprland Workstation)
         elitebook = mkHost {
           name = "elitebook";
         };
 
-        # MacBook Pro 13" (2020)
+        # MacBook Pro 13" 2020 (GNOME Workstation)
         macbook-2020 = mkHost {
           name = "macbook-2020";
+        };
+
+        # Mac Mini 2012 A1347 (Moonlight Kiosk)
+        macmini-2012 = mkHost {
+          name = "macmini-2012";
         };
       };
     };
