@@ -7,6 +7,17 @@
 
 let
   cfg = config.features.waybar;
+
+  # Script to detect any active WireGuard interface
+  wireguardStatusScript = pkgs.writeShellScript "waybar-wireguard-status" ''
+    WG_DEV=$(${pkgs.iproute2}/bin/ip -br link show type wireguard 2>/dev/null | ${pkgs.gawk}/bin/awk '{print $1}' | head -n 1)
+    if [ -n "$WG_DEV" ]; then
+      WG_IP=$(${pkgs.iproute2}/bin/ip -br addr show dev "$WG_DEV" 2>/dev/null | ${pkgs.gawk}/bin/awk '{print $3}')
+      echo "{\"text\":\"󰖂 VPN\",\"class\":\"connected\",\"tooltip\":\"WireGuard ($WG_DEV): $WG_IP\"}"
+    else
+      echo "{\"text\":\"\",\"class\":\"disconnected\",\"tooltip\":\"WireGuard: Disconnected\"}"
+    fi
+  '';
 in
 {
   options.features.waybar = {
@@ -46,6 +57,7 @@ in
       modules-right = [
         "pulseaudio"
         "network"
+        "custom/wireguard"
         "cpu"
         "memory"
         "battery"
@@ -101,6 +113,14 @@ in
         format-ethernet = "󰈀 {ipaddr}";
         format-disconnected = "⚠ Disconnected";
         tooltip-format = "{ifname} via {gwaddr}";
+      };
+
+      # Custom dynamic WireGuard indicator
+      "custom/wireguard" = {
+        exec = "${wireguardStatusScript}";
+        return-type = "json";
+        interval = 3;
+        format = "{}";
       };
 
       "pulseaudio" = {
@@ -159,6 +179,7 @@ in
       #clock,
       #pulseaudio,
       #network,
+      #custom-wireguard,
       #cpu,
       #memory,
       #battery,
@@ -172,6 +193,10 @@ in
       #clock {
         color: #cdd6f4;
         font-weight: bold;
+      }
+
+      #custom-wireguard {
+        color: #a6e3a1;
       }
 
       #battery {
