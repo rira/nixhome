@@ -1,4 +1,11 @@
-{ config, lib, pkgs, inputs, hostName, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  inputs,
+  hostName,
+  ...
+}:
 
 let
   cfg = config.base;
@@ -29,7 +36,10 @@ in
 
     # Flakes & Store optimization
     nix.settings = {
-      experimental-features = [ "nix-command" "flakes" ];
+      experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
       auto-optimise-store = true;
     };
 
@@ -58,8 +68,14 @@ in
 
     systemd.services.tailscale-autoconnect = {
       description = "Tailscale automatic authentication";
-      after = [ "network-pre.target" "tailscale.service" ];
-      wants = [ "network-pre.target" "tailscale.service" ];
+      after = [
+        "network-pre.target"
+        "tailscale.service"
+      ];
+      wants = [
+        "network-pre.target"
+        "tailscale.service"
+      ];
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         Type = "oneshot";
@@ -87,10 +103,16 @@ in
       isNormalUser = true;
       description = "Fleet Administrator";
       initialPassword = "changeme";
-      extraGroups = [ "wheel" "networkmanager" "video" "audio" "input" ];
+      extraGroups = [
+        "wheel"
+        "networkmanager"
+        "video"
+        "audio"
+        "input"
+      ];
       shell = pkgs.zsh;
       openssh.authorizedKeys.keys = [
-        # Lägg till din publika SSH-nyckel här
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBO8CcDAcZ2wt4FThIlr3Nffe6EY+6+ZNBgdKjUBWjtb richard-fleet-admin"
       ];
     };
 
