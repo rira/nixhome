@@ -151,6 +151,11 @@ in
         "INC_APPEND_HISTORY"
         "SHARE_HISTORY"
       ];
+      # Bind Tab to accept autosuggestion word-by-word
+      interactiveShellInit = ''
+        bindkey '^I' forward-word
+        bindkey '^[[Z' backward-word
+      '';
     };
 
     # Starship cross-shell prompt
