@@ -20,8 +20,13 @@ in
   config = lib.mkIf cfg.enable {
     nixpkgs.config.allowUnfree = true;
 
-    networking.hostName = hostName;
-    networking.networkmanager.enable = true;
+    networking = {
+      hostName = hostName;
+      networkmanager = {
+        enable = true;
+        wifi.powersave = false;
+      };
+    };
 
     # Bluetooth & Blueman manager
     hardware.bluetooth = {
