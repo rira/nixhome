@@ -14,6 +14,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # Kernel parameters: disable Intel display power-saving throttles
+    boot.kernelParams = [
+      "i915.enable_psr=0"
+      "i915.enable_dc=0"
+      "i915.enable_fbc=0"
+    ];
+
     # Enable Hyprland compositor
     programs.hyprland = {
       enable = true;
@@ -22,6 +29,10 @@ in
 
     # Automatically enable Waybar when Hyprland is active
     features.waybar.enable = lib.mkDefault true;
+
+    # Hardware permissions for brightness control and audio
+    services.udev.packages = [ pkgs.brightnessctl ];
+    users.users.richard.extraGroups = [ "video" "audio" "input" ];
 
     # Enable PipeWire audio stack
     services.pulseaudio.enable = false;
@@ -62,7 +73,7 @@ in
       gtk-theme-name=Adwaita-dark
     '';
 
-    # Rofi configuration using the built-in "fancy" theme
+    # Rofi configuration with "fancy" theme
     environment.etc."xdg/rofi/config.rasi".text = ''
       configuration {
         modi: "drun,run";
@@ -89,14 +100,20 @@ in
       };
     };
 
-    # Session variables for Wayland and dark theme enforcement
+    # Session variables: Wayland, Dark Theme, and Touchscreen gesture support
     environment.sessionVariables = {
       NIXOS_OZONE_WL = "1";
       WLR_NO_HARDWARE_CURSORS = "1";
       GTK_THEME = "Adwaita:dark";
+
+      # Touchscreen smooth scrolling & pinch-to-zoom
+      MOZ_ENABLE_WAYLAND = "1";
+      MOZ_USE_XINPUT2 = "1";
+      GDK_BACKEND = "wayland,x11";
+      QT_QPA_PLATFORM = "wayland;xcb";
     };
 
-    # Essential GUI and hardware control tools
+    # Essential GUI tools and hardware utilities
     environment.systemPackages = with pkgs; [
       kitty
       rofi
@@ -115,6 +132,7 @@ in
       exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
       exec-once = waybar -c /etc/xdg/waybar/config.jsonc -s /etc/xdg/waybar/style.css
       exec-once = swaybg -c "#1e1e2e"
+      exec-once = nm-applet --indicator &
 
       # Monitor configuration
       monitor=,preferred,auto,1
@@ -150,18 +168,30 @@ in
       # Keybindings (Super = Windows key)
       $mainMod = SUPER
 
+      # Screenshot to clipboard
+      bind = $mainMod SHIFT, S, exec, grim -g "$(slurp)" - | wl-copy --type image/png
+
       # System and core application controls
       bind = $mainMod, Return, exec, kitty
       bind = $mainMod, Q, killactive,
       bind = $mainMod, M, exit,
       bind = $mainMod, Space, exec, rofi -show drun
-      bind = $mainMod, F, togglefloating,
+
+      # Fullscreen and floating controls
+      bind = $mainMod, F, fullscreen, 0
+      bind = $mainMod SHIFT, F, togglefloating,
 
       # Window focus movement
       bind = $mainMod, left, movefocus, l
       bind = $mainMod, right, movefocus, r
       bind = $mainMod, up, movefocus, u
       bind = $mainMod, down, movefocus, d
+
+      # Window movement
+      bind = $mainMod SHIFT, left, movewindow, l
+      bind = $mainMod SHIFT, right, movewindow, r
+      bind = $mainMod SHIFT, up, movewindow, u
+      bind = $mainMod SHIFT, down, movewindow, d
 
       # Relative workspace switching (Ctrl + Alt + Left/Right)
       bind = CTRL ALT, right, workspace, e+1
@@ -201,6 +231,9 @@ in
       bindl = , XF86AudioPlay, exec, playerctl play-pause
       bindl = , XF86AudioNext, exec, playerctl next
       bindl = , XF86AudioPrev, exec, playerctl previous
+
+      # Smart Airplane mode toggle (rfkill + NetworkManager sync)
+      bindl = , XF86RFKill, exec, sh -c "if rfkill list | grep -q 'Soft blocked: yes'; then rfkill unblock all && nmcli radio all on; else rfkill block all; fi"
 
       # Mouse move & resize
       bindm = $mainMod, mouse:272, movewindow

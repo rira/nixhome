@@ -7,229 +7,197 @@
 
 let
   cfg = config.features.waybar;
-
-  # Script to detect any active WireGuard interface
-  wireguardStatusScript = pkgs.writeShellScript "waybar-wireguard-status" ''
-    WG_DEV=$(${pkgs.iproute2}/bin/ip -br link show type wireguard 2>/dev/null | ${pkgs.gawk}/bin/awk '{print $1}' | head -n 1)
-    if [ -n "$WG_DEV" ]; then
-      WG_IP=$(${pkgs.iproute2}/bin/ip -br addr show dev "$WG_DEV" 2>/dev/null | ${pkgs.gawk}/bin/awk '{print $3}')
-      echo "{\"text\":\"󰖂 VPN\",\"class\":\"connected\",\"tooltip\":\"WireGuard ($WG_DEV): $WG_IP\"}"
-    else
-      echo "{\"text\":\"\",\"class\":\"disconnected\",\"tooltip\":\"WireGuard: Disconnected\"}"
-    fi
-  '';
 in
 {
   options.features.waybar = {
-    enable = lib.mkEnableOption "Waybar status bar configuration";
+    enable = lib.mkEnableOption "Waybar status bar";
   };
 
   config = lib.mkIf cfg.enable {
+    programs.waybar.enable = true;
+
+    # Icon font packages
     fonts.packages = with pkgs; [
-      nerd-fonts.jetbrains-mono
+      nerd-fonts.symbols-only
       font-awesome
     ];
 
-    programs.waybar = {
-      enable = true;
-      package = pkgs.waybar;
-    };
+    # System utilities
+    environment.systemPackages = with pkgs; [
+      wireplumber
+      brightnessctl
+      pavucontrol
+      blueman
+      trayscale
+    ];
 
-    # Waybar JSONC configuration
-    environment.etc."xdg/waybar/config.jsonc".text = builtins.toJSON {
-      layer = "top";
-      position = "top";
-      height = 36;
-      spacing = 6;
-      margin-top = 6;
-      margin-left = 10;
-      margin-right = 10;
+    # Waybar layout configuration
+    environment.etc."xdg/waybar/config.jsonc".text = ''
+      {
+        "layer": "top",
+        "position": "top",
+        "height": 34,
+        "spacing": 6,
+        "modules-left": ["hyprland/workspaces"],
+        "modules-center": ["clock"],
+        "modules-right": [
+          "pulseaudio",
+          "pulseaudio#microphone",
+          "backlight",
+          "bluetooth",
+          "battery",
+          "network",
+          "tray"
+        ],
 
-      modules-left = [
-        "hyprland/workspaces"
-        "hyprland/window"
-      ];
+        "hyprland/workspaces": {
+          "disable-scroll": true,
+          "all-outputs": true,
+          "format": "{name}"
+        },
 
-      modules-center = [
-        "clock"
-      ];
+        "clock": {
+          "format": "{:%Y-%m-%d %H:%M}",
+          "tooltip-format": "<tt><small>{calendar}</small></tt>"
+        },
 
-      modules-right = [
-        "pulseaudio"
-        "network"
-        "custom/wireguard"
-        "cpu"
-        "memory"
-        "battery"
-        "tray"
-      ];
+        "pulseaudio": {
+          "format": "{icon} {volume}%",
+          "format-muted": "󰝟 Muted",
+          "format-icons": {
+            "default": ["", "", ""]
+          },
+          "on-click": "${pkgs.wireplumber}/bin/wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+          "on-click-right": "${pkgs.pavucontrol}/bin/pavucontrol"
+        },
 
-      "hyprland/workspaces" = {
-        disable-scroll = true;
-        all-outputs = true;
-        format = "{name}";
-        on-click = "activate";
-      };
+        "pulseaudio#microphone": {
+          "format": "{format_source}",
+          "format-source": " {volume}%",
+          "format-source-muted": " Muted",
+          "on-click": "${pkgs.wireplumber}/bin/wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle",
+          "on-scroll-up": "${pkgs.wireplumber}/bin/wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SOURCE@ 5%+",
+          "on-scroll-down": "${pkgs.wireplumber}/bin/wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%-"
+        },
 
-      "hyprland/window" = {
-        max-length = 40;
-        separate-outputs = true;
-      };
+        "backlight": {
+          "format": "☀ {percent}%",
+          "on-scroll-up": "${pkgs.brightnessctl}/bin/brightnessctl set 5%+",
+          "on-scroll-down": "${pkgs.brightnessctl}/bin/brightnessctl set 5%-"
+        },
 
-      "clock" = {
-        format = " {:%H:%M}";
-        format-alt = " {:%Y-%m-%d   %H:%M}";
-        tooltip-format = "<tt><small>{calendar}</small></tt>";
-      };
+        "bluetooth": {
+          "format": " {status}",
+          "format-disabled": "󰂲 Off",
+          "format-connected": " {device_alias}",
+          "format-connected-battery": " {device_alias} {device_battery_percentage}%",
+          "tooltip-format": "{controller_alias}\t{controller_address}\n\n{num_connections} connected",
+          "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}",
+          "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
+          "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t({device_battery_percentage}%)",
+          "on-click": "blueman-manager"
+        },
 
-      "cpu" = {
-        format = " {usage}%";
-        tooltip = true;
-        interval = 2;
-      };
+        "battery": {
+          "bat": "BAT0",
+          "interval": 30,
+          "states": {
+            "warning": 30,
+            "critical": 15
+          },
+          "format": "{icon} {capacity}%",
+          "format-charging": "󰂄 {capacity}%",
+          "format-plugged": " {capacity}%",
+          "format-icons": ["󰂃", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
+        },
 
-      "memory" = {
-        format = " {}%";
-        interval = 2;
-      };
+        "network": {
+          "format-wifi": " {signalStrength}%",
+          "format-ethernet": "󰈀 {ipaddr}",
+          "format-disconnected": "󰤮 Disconnected",
+          "tooltip-format-wifi": "{essid} ({signalStrength}%) \nIP: {ipaddr}\nGateway: {gwaddr}",
+          "tooltip-format-ethernet": "{ifname} 󰈀\nIP: {ipaddr}\nGateway: {gwaddr}",
+          "tooltip-format-disconnected": "Disconnected"
+        },
 
-      "battery" = {
-        states = {
-          good = 95;
-          warning = 30;
-          critical = 15;
-        };
-        format = "{icon} {capacity}%";
-        format-charging = " {capacity}%";
-        format-plugged = " {capacity}%";
-        format-alt = "{icon} {capacity}% ({time})";
-        format-icons = [ "󰁺" "󰁼" "󰁾" "󰂀" "󰂂" ];
-        tooltip-format = "{timeTo}\nPower draw: {power}W\nHealth: {health}%";
-        interval = 5;
-      };
+        "tray": {
+          "spacing": 10
+        }
+      }
+    '';
 
-      "network" = {
-        format-wifi = " {signalStrength}%";
-        format-ethernet = "󰈀 {ipaddr}";
-        format-disconnected = "⚠ Disconnected";
-        tooltip-format = "{ifname} via {gwaddr}";
-      };
-
-      # Custom dynamic WireGuard indicator
-      "custom/wireguard" = {
-        exec = "${wireguardStatusScript}";
-        return-type = "json";
-        interval = 3;
-        format = "{}";
-      };
-
-      "pulseaudio" = {
-        format = "{icon} {volume}%";
-        format-muted = "󰝟 Muted";
-        format-icons = {
-          default = [ "" "" "" ];
-        };
-        on-click = "${pkgs.pavucontrol}/bin/pavucontrol";
-      };
-
-      "tray" = {
-        icon-size = 18;
-        spacing = 10;
-      };
-    };
-
-    # Capsule styling
+    # Waybar Catppuccin styling
     environment.etc."xdg/waybar/style.css".text = ''
       * {
+        font-family: "Symbols Nerd Font", "Font Awesome 6 Free", Sans-Serif;
+        font-size: 13px;
+        font-weight: bold;
         border: none;
         border-radius: 0;
-        font-family: "JetBrainsMono Nerd Font", "Font Awesome 6 Free", sans-serif;
-        font-size: 13px;
         min-height: 0;
       }
 
       window#waybar {
-        background-color: transparent;
+        background-color: rgba(30, 30, 46, 0.92);
         color: #cdd6f4;
-      }
-
-      #workspaces {
-        background-color: rgba(30, 30, 46, 0.85);
-        margin: 0 4px;
-        padding: 2px 6px;
-        border-radius: 12px;
+        border-bottom: 2px solid #313244;
       }
 
       #workspaces button {
         padding: 0 8px;
         color: #6c7086;
-        border-radius: 8px;
+        background: transparent;
       }
 
       #workspaces button.active {
-        color: #cdd6f4;
-        background-color: rgba(137, 180, 250, 0.25);
+        color: #89b4fa;
+        border-bottom: 2px solid #89b4fa;
       }
 
-      #workspaces button.urgent {
-        color: #f38ba8;
-      }
-
-      #window,
       #clock,
       #pulseaudio,
-      #network,
-      #custom-wireguard,
-      #cpu,
-      #memory,
+      #pulseaudio.microphone,
+      #backlight,
+      #bluetooth,
       #battery,
+      #network,
       #tray {
-        background-color: rgba(30, 30, 46, 0.85);
-        padding: 4px 12px;
-        margin: 0 4px;
-        border-radius: 12px;
-      }
-
-      #clock {
+        padding: 2px 10px;
+        margin: 4px 2px;
+        border-radius: 6px;
+        background-color: #313244;
         color: #cdd6f4;
-        font-weight: bold;
       }
 
-      #custom-wireguard {
-        color: #a6e3a1;
+      #bluetooth.disabled {
+        background-color: #45475a;
+        color: #a6adc8;
       }
 
-      #battery {
-        color: #a6e3a1;
+      #bluetooth.connected {
+        background-color: #89b4fa;
+        color: #11111b;
+      }
+
+      #network.disconnected {
+        background-color: #f38ba8;
+        color: #11111b;
+      }
+
+      /* Microphone mute alerts */
+      #pulseaudio.microphone.source-muted {
+        background-color: #f38ba8;
+        color: #11111b;
       }
 
       #battery.warning {
-        color: #fab387;
+        background-color: #fab387;
+        color: #11111b;
       }
 
       #battery.critical {
-        color: #f38ba8;
-      }
-
-      #battery.charging,
-      #battery.plugged {
-        color: #94e2d5;
-      }
-
-      #pulseaudio {
-        color: #89b4fa;
-      }
-
-      #network {
-        color: #94e2d5;
-      }
-
-      #cpu {
-        color: #f9e2af;
-      }
-
-      #memory {
-        color: #cba6f7;
+        background-color: #f38ba8;
+        color: #11111b;
       }
     '';
   };

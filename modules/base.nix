@@ -23,6 +23,13 @@ in
     networking.hostName = hostName;
     networking.networkmanager.enable = true;
 
+    # Bluetooth & Blueman manager
+    hardware.bluetooth = {
+      enable = true;
+      powerOnBoot = true;
+    };
+    services.blueman.enable = true;
+
     # Timezone & Localization
     time.timeZone = "Europe/Stockholm";
     i18n.defaultLocale = "en_US.UTF-8";
@@ -33,6 +40,18 @@ in
       variant = "";
     };
     console.keyMap = "sv-latin1";
+
+    # Hardware acceleration & Video decoding (VA-API / Moonlight)
+    hardware.graphics = {
+      enable = true;
+      enable32Bit = true;
+      extraPackages = with pkgs; [
+        intel-media-driver
+        intel-vaapi-driver
+        libva-vdpau-driver
+        libvdpau-va-gl
+      ];
+    };
 
     # Flakes & Store optimization
     nix.settings = {
@@ -60,7 +79,7 @@ in
       randomizedDelaySec = "45min";
     };
 
-    # Thunderbolt device management daemon (for Thunderbolt 4 docks & peripherals)
+    # Thunderbolt device management daemon
     services.hardware.bolt.enable = true;
 
     # Tailscale mesh VPN
@@ -74,7 +93,7 @@ in
       "d /var/secrets 0750 richard wheel -"
     ];
 
-    # Trigger autoconnect-service when secrets.env gets created/updated through SCP
+    # Trigger autoconnect-service when secrets.env gets created/updated
     systemd.paths.tailscale-autoconnect = {
       description = "Watch for Tailscale secrets file";
       wantedBy = [ "multi-user.target" ];
@@ -151,11 +170,6 @@ in
         "INC_APPEND_HISTORY"
         "SHARE_HISTORY"
       ];
-      # Bind Tab to accept autosuggestion word-by-word
-      interactiveShellInit = ''
-        bindkey '^I' forward-word
-        bindkey '^[[Z' backward-word
-      '';
     };
 
     # Starship cross-shell prompt
@@ -189,6 +203,15 @@ in
       vim
       jq
       htop
+      wl-clipboard
+      xclip
+      grim
+      slurp
+      networkmanagerapplet
+      libva-utils
+      psmisc
+      bluez
+      blueman
     ];
 
     system.stateVersion = "24.11";
