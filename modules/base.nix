@@ -62,11 +62,24 @@ in
       auto-optimise-store = true;
     };
 
-    # Garbage collection
-    nix.gc = {
-      automatic = true;
-      dates = "weekly";
-      options = "--delete-older-than 14d";
+    # Keep only the 3 latest generations in garbage collection
+    systemd.services.nix-gc-by-count = {
+      description = "Keep only last 3 NixOS generations and garbage collect";
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = pkgs.writeShellScript "nix-gc-keep-3" ''
+          /run/current-system/sw/bin/nix-env -p /nix/var/nix/profiles/system --delete-generations +3
+          /run/current-system/sw/bin/nix-collect-garbage
+        '';
+      };
+    };
+
+    systemd.timers.nix-gc-by-count = {
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnCalendar = "daily";
+        Persistent = true;
+      };
     };
 
     # Automatic system upgrades
@@ -193,10 +206,13 @@ in
     };
 
     # UEFI Bootloader
-    boot.loader.systemd-boot.enable = true;
+    boot.loader.systemd-boot = {
+      enable = true;
+      configurationLimit = 3;
+    };
     boot.loader.efi.canTouchEfiVariables = true;
 
-    # Base CLI packages
+    # Base CLI packages & utilities
     environment.systemPackages = with pkgs; [
       git
       curl
@@ -212,6 +228,8 @@ in
       psmisc
       bluez
       blueman
+      trayscale
+      nh
     ];
 
     system.stateVersion = "24.11";
