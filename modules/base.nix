@@ -175,6 +175,9 @@ in
       autosuggestions.enable = true;
       syntaxHighlighting.enable = true;
       histSize = 10000;
+      shellAliases = {
+       g = "git";
+      };
       setOptions = [
         "HIST_IGNORE_ALL_DUPS"
         "HIST_FIND_NO_DUPS"
@@ -244,6 +247,8 @@ in
       vim
       jq
       htop
+      usbutils
+      pciutils
       wl-clipboard
       xclip
       grim
