@@ -21,4 +21,6 @@
     enable = true;
     user = "richard";
   };
+  
+  services.fprintd.enable = true;
 }

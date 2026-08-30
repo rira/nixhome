@@ -240,7 +240,6 @@ in
     };
     boot.loader.efi.canTouchEfiVariables = true;
 
-    # Base CLI packages & utilities
     environment.systemPackages = with pkgs; [
       git
       curl
