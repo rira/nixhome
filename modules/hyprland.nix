@@ -133,6 +133,7 @@ in
       exec-once = waybar -c /etc/xdg/waybar/config.jsonc -s /etc/xdg/waybar/style.css
       exec-once = swaybg -c "#1e1e2e"
       exec-once = nm-applet --indicator &
+      exec-once = trayscale --hide-window
 
       # Monitor configuration
       monitor=,preferred,auto,1
