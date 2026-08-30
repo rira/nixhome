@@ -185,6 +185,31 @@ in
       ];
     };
 
+    # Global Git configuration
+    programs.git = {
+      enable = true;
+      config = {
+        alias = {
+          st = "status";
+          ci = "commit";
+          sw = "switch";
+          co = "checkout";
+        };
+        init = {
+          defaultBranch = "main";
+        };
+        pull = {
+          rebase = false;
+        };
+        push = {
+          autoSetupRemote = true;
+        };
+        core = {
+          editor = "vim";
+        };
+      };
+    };
+
     # Starship cross-shell prompt
     programs.starship = {
       enable = true;
