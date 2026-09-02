@@ -58,6 +58,13 @@ in
       ];
     };
 
+    # Power management / Clamshell mode
+    # Suspend on lid close only when untethered; ignore when docked or external display is connected
+    services.logind = {
+      lidSwitch = "suspend";
+      lidSwitchDocked = "ignore";
+    };
+
     # Flakes & Store optimization
     nix.settings = {
       experimental-features = [
@@ -181,7 +188,7 @@ in
       syntaxHighlighting.enable = true;
       histSize = 10000;
       shellAliases = {
-       g = "git";
+        g = "git";
       };
       setOptions = [
         "HIST_IGNORE_ALL_DUPS"

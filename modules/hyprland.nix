@@ -138,6 +138,10 @@ in
       # Monitor configuration
       monitor=,preferred,auto,1
 
+      # Clamshell mode: turn off internal display when lid is closed, re-enable when opened
+      bindl = , switch:on:Lid Switch, exec, hyprctl keyword monitor "eDP-1, disable"
+      bindl = , switch:off:Lid Switch, exec, hyprctl keyword monitor "eDP-1, preferred, auto, 1"
+
       # Keyboard layout & touchpad
       input {
         kb_layout = se,us
