@@ -59,11 +59,17 @@ in
     };
 
     # Power management / Clamshell mode
-    # Suspend on lid close only when untethered; ignore when docked or external display is connected
+    # Suspend on lid close only when untethered; stay awake when docked or external power is attached
     services.logind = {
       lidSwitch = "suspend";
       lidSwitchDocked = "ignore";
+      lidSwitchExternalPower = "ignore";
     };
+
+    # Enable wake-from-sleep for all USB devices and hub controllers (Thunderbolt dock wake)
+    services.udev.extraRules = ''
+      ACTION=="add", SUBSYSTEM=="usb", TEST=="power/wakeup", ATTR{power/wakeup}="enabled"
+    '';
 
     # Flakes & Store optimization
     nix.settings = {
@@ -271,6 +277,7 @@ in
       blueman
       trayscale
       nh
+      alsa-utils
     ];
 
     system.stateVersion = "24.11";

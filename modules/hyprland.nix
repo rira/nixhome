@@ -11,6 +11,15 @@ in
 {
   options.features.hyprland = {
     enable = lib.mkEnableOption "Hyprland desktop environment";
+
+    monitors = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [
+        "eDP-1, preferred, auto, 1"
+        ", preferred, auto, 1"
+      ];
+      description = "List of monitor rule lines passed directly to hyprland.conf";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -135,10 +144,14 @@ in
       exec-once = nm-applet --indicator &
       exec-once = trayscale --hide-window
 
-      # Monitor configuration
-      monitor=,preferred,auto,1
+      # Clamshell mode at login: check if lid is already closed when booting docked
+      exec-once = sh -c "if grep -q closed /proc/acpi/button/lid/*/state 2>/dev/null; then hyprctl keyword monitor 'eDP-1, disable'; fi"
 
-      # Clamshell mode: turn off internal display when lid is closed, re-enable when opened
+      # --- Monitor Configuration ---
+      ${lib.concatMapStringsSep "\n" (m: "monitor = ${m}") cfg.monitors}
+
+      # --- Clamshell Mode Transitions ---
+      # Turn off internal display when lid is closed, re-enable when opened
       bindl = , switch:on:Lid Switch, exec, hyprctl keyword monitor "eDP-1, disable"
       bindl = , switch:off:Lid Switch, exec, hyprctl keyword monitor "eDP-1, preferred, auto, 1"
 
@@ -181,6 +194,9 @@ in
       bind = $mainMod, Q, killactive,
       bind = $mainMod, M, exit,
       bind = $mainMod, Space, exec, rofi -show drun
+
+      # System sleep / suspend shortcut
+      bind = $mainMod SHIFT, Z, exec, systemctl suspend
 
       # Fullscreen and floating controls
       bind = $mainMod, F, fullscreen, 0
