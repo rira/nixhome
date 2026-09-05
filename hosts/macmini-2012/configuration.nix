@@ -11,14 +11,20 @@
   # Disko should not manage partitions on this host
   diskConfig.enable = false;
 
-  # Required for Mac mini 2011 (Sandy Bridge): prevents freezes and lets i915 load
+  # Required for Mac mini 2011/2012: prevents freezes and lets i915 load
   boot.kernelParams = [ "acpi_osi=Darwin" ];
 
   # Streaming kiosk features
   features.streaming.enable = true;
-  features.kiosk.enable = true;
+  features.kiosk = {
+    enable = true;
+    user = "liam";
+  };
 
-  # Hardware acceleration for Intel HD Graphics (Sandy Bridge)
+  # Ensure graphical target is default on boot
+  systemd.defaultUnit = "graphical.target";
+
+  # Hardware acceleration for Intel HD Graphics
   hardware.graphics = {
     enable = true;
     extraPackages = with pkgs; [
@@ -36,16 +42,6 @@
   systemd.targets.hibernate.enable = false;
   systemd.targets.hybrid-sleep.enable = false;
 
-  # Primary kiosk user with autologin (no sudo/wheel access)
-  users.users.liam = {
-    isNormalUser = true;
-    description = "Liam";
-    initialPassword = "changeme";
-    extraGroups = [ "video" "audio" "input" ];
-  };
-
-  services.displayManager.autoLogin = {
-    enable = true;
-    user = "liam";
-  };
+  # Kiosk module handles user creation and groups; add description here
+  users.users.liam.description = "Liam";
 }

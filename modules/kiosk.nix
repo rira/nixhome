@@ -3,10 +3,18 @@
 let
   cfg = config.features.kiosk;
 
-  # Shell wrapper script establishing Wayland runtime environment and starting Moonlight
   kioskRunner = pkgs.writeShellScriptBin "kiosk-runner" ''
     export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-    export WAYLAND_DISPLAY="wayland-0"
+    export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
+    export QT_QPA_PLATFORM="wayland"
+    export SDL_VIDEODRIVER="wayland"
+    export NO_AT_BRIDGE=1
+
+    # Wait briefly for Cage compositor socket to become available
+    while [ -z "$WAYLAND_DISPLAY" ] || [ ! -e "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]; do
+      sleep 0.1
+    done
+
     exec ${pkgs.moonlight-qt}/bin/moonlight
   '';
 in
@@ -21,23 +29,23 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # Unprivileged user running the graphical interface
     users.users.${cfg.user} = {
       isNormalUser = true;
       extraGroups = [ "video" "audio" "input" ];
       initialPassword = "kiosk";
     };
 
-    # Launch Cage compositor on tty1
     services.cage = {
       enable = true;
       user = cfg.user;
       program = "${kioskRunner}/bin/kiosk-runner";
-      extraArguments = [ "-s" ]; # -s enables DPMS monitor power management
+      extraArguments = [ "-s" ];
     };
 
-    # Automatic recovery if the application exits or crashes
+    # Direct logs to journald and keep kiosk running
     systemd.services."cage-tty1".serviceConfig = {
+      StandardOutput = "journal";
+      StandardError = "journal";
       Restart = "always";
       RestartSec = "2s";
     };
