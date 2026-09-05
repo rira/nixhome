@@ -30,6 +30,27 @@
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
+  # Primary workstation user
+  users.users.richard = {
+    isNormalUser = true;
+    description = "Richard";
+    initialPassword = "changeme";
+    extraGroups = [
+      "wheel"
+      "networkmanager"
+      "video"
+      "audio"
+      "input"
+    ];
+    shell = pkgs.zsh;
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBFMhAwmth99uLCtyQx9qr/oQn1nRfQY5vpTnpLFBacL"
+    ];
+  };
+
+  # Passwordless sudo for local admin tasks
+  security.sudo.wheelNeedsPassword = false;
+
   # Automatic login directly into Hyprland session
   services.displayManager.autoLogin = {
     enable = true;

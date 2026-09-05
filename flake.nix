@@ -36,6 +36,7 @@
             disko.nixosModules.disko
             ./modules/disko-luks.nix
             ./modules/base.nix
+            ./modules/users.nix
             ./modules/dev.nix
             ./modules/apps.nix
             ./modules/profiles.nix

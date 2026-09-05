@@ -119,9 +119,9 @@ in
       useRoutingFeatures = "client";
     };
 
-    # Create /var/secrets automatically for richard
+    # Create /var/secrets automatically owned by root
     systemd.tmpfiles.rules = [
-      "d /var/secrets 0750 richard wheel -"
+      "d /var/secrets 0750 root wheel -"
     ];
 
     # Trigger autoconnect-service when secrets.env gets created/updated
@@ -155,36 +155,6 @@ in
         fi
       '';
     };
-
-    # SSH remote management
-    services.openssh = {
-      enable = true;
-      settings = {
-        PasswordAuthentication = false;
-        KbdInteractiveAuthentication = false;
-      };
-    };
-
-    # Universal Fleet Administrator Account
-    users.users.richard = {
-      isNormalUser = true;
-      description = "Fleet Administrator";
-      initialPassword = "changeme";
-      extraGroups = [
-        "wheel"
-        "networkmanager"
-        "video"
-        "audio"
-        "input"
-      ];
-      shell = pkgs.zsh;
-      openssh.authorizedKeys.keys = [
-        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBO8CcDAcZ2wt4FThIlr3Nffe6EY+6+ZNBgdKjUBWjtb richard-fleet-admin"
-      ];
-    };
-
-    # Passwordless sudo for admin tasks
-    security.sudo.wheelNeedsPassword = false;
 
     # System-wide shell setup
     programs.zsh = {
