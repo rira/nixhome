@@ -41,6 +41,7 @@
             ./modules/apps.nix
             ./modules/profiles.nix
             ./modules/hyprland.nix
+            ./modules/audio.nix
             ./modules/waybar.nix
             ./modules/gnome.nix
             ./modules/streaming.nix

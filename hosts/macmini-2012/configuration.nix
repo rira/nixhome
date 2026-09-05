@@ -16,6 +16,7 @@
 
   # Streaming kiosk features
   features.streaming.enable = true;
+  features.audio.enable = true;
   features.kiosk = {
     enable = true;
     user = "liam";

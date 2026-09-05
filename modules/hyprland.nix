@@ -36,23 +36,13 @@ in
       xwayland.enable = true;
     };
 
-    # Automatically enable Waybar when Hyprland is active
+    # Automatically enable Waybar and Audio when Hyprland is active
     features.waybar.enable = lib.mkDefault true;
+    features.audio.enable = lib.mkDefault true;
 
-    # Hardware permissions for brightness control and audio
+    # Hardware permissions for brightness control and input
     services.udev.packages = [ pkgs.brightnessctl ];
     users.users.richard.extraGroups = [ "video" "audio" "input" ];
-
-    # Enable PipeWire audio stack
-    services.pulseaudio.enable = false;
-    security.rtkit.enable = true;
-    services.pipewire = {
-      enable = true;
-      alsa.enable = true;
-      alsa.support32Bit = true;
-      pulse.enable = true;
-      jack.enable = true;
-    };
 
     # Enable dconf to handle desktop settings and themes
     programs.dconf = {
@@ -128,7 +118,6 @@ in
       rofi
       swaybg
       wl-clipboard
-      pavucontrol
       brightnessctl
       playerctl
       adwaita-icon-theme
