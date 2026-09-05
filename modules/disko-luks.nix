@@ -5,6 +5,12 @@ let
 in
 {
   options.diskConfig = {
+    enable = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Enable Disko LUKS partitioning scheme";
+    };
+
     device = lib.mkOption {
       type = lib.types.str;
       default = "/dev/nvme0n1";
@@ -12,7 +18,7 @@ in
     };
   };
 
-  config = {
+  config = lib.mkIf cfg.enable {
     disko.devices = {
       disk = {
         main = {
