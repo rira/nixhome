@@ -7,6 +7,26 @@
 
 let
   cfg = config.features.hyprland;
+
+  # Move all windows from active workspace to target workspace, sorted by screen position
+  moveAllToWorkspace = pkgs.writeShellScriptBin "hypr-move-all" ''
+    TARGET="$1"
+    ACTIVE_WS=$(hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
+
+    if [ "$ACTIVE_WS" -eq "$TARGET" ]; then
+      exit 0
+    fi
+
+    # Retrieve and sort window addresses in left-to-right / top-to-bottom spatial order
+    WINDOWS=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r --argjson ws "$ACTIVE_WS" \
+      '[.[] | select(.workspace.id == $ws)] | sort_by(.at[0], .at[1]) | .[].address')
+
+    for addr in $WINDOWS; do
+      hyprctl dispatch movetoworkspacesilent "$TARGET,address:$addr"
+    done
+
+    hyprctl dispatch workspace "$TARGET"
+  '';
 in
 {
   options.features.hyprland = {
@@ -72,12 +92,13 @@ in
       gtk-theme-name=Adwaita-dark
     '';
 
-    # Rofi configuration with "fancy" theme
+    # Rofi configuration with "fancy" theme & window switcher
     environment.etc."xdg/rofi/config.rasi".text = ''
       configuration {
-        modi: "drun,run";
+        modi: "drun,run,window";
         show-icons: true;
         display-drun: "Apps";
+        display-window: "Windows";
         drun-display-format: "{name}";
       }
 
@@ -122,6 +143,8 @@ in
       playerctl
       adwaita-icon-theme
       gnome-themes-extra
+      jq
+      moveAllToWorkspace
     ];
 
     # Hyprland base configuration
@@ -133,8 +156,8 @@ in
       exec-once = nm-applet --indicator &
       exec-once = trayscale --hide-window
 
-      # Clamshell mode at login: check if lid is already closed when booting docked
-      exec-once = sh -c "if grep -q closed /proc/acpi/button/lid/*/state 2>/dev/null; then hyprctl keyword monitor 'eDP-1, disable'; fi"
+      # Clamshell mode: evaluated at login and on every configuration reload
+      exec = sh -c "sleep 1 && if grep -q closed /proc/acpi/button/lid/*/state 2>/dev/null; then hyprctl keyword monitor 'eDP-1, disable'; fi"
 
       # --- Monitor Configuration ---
       ${lib.concatMapStringsSep "\n" (m: "monitor = ${m}") cfg.monitors}
@@ -163,6 +186,10 @@ in
         layout = dwindle
       }
 
+      dwindle {
+        preserve_split = true
+      }
+
       decoration {
         rounding = 10
         blur {
@@ -174,6 +201,9 @@ in
 
       # Keybindings (Super = Windows key)
       $mainMod = SUPER
+
+      # Window switcher menu (Alt + Tab)
+      bind = ALT, Tab, exec, rofi -show window
 
       # Screenshot to clipboard
       bind = $mainMod SHIFT, S, exec, grim -g "$(slurp)" - | wl-copy --type image/png
@@ -203,13 +233,11 @@ in
       bind = $mainMod SHIFT, up, movewindow, u
       bind = $mainMod SHIFT, down, movewindow, d
 
-      # Relative workspace switching (Ctrl + Alt + Left/Right)
-      bind = CTRL ALT, right, workspace, e+1
-      bind = CTRL ALT, left, workspace, e-1
-
-      # Move active window to next/previous workspace
-      bind = CTRL ALT SHIFT, right, movetoworkspace, e+1
-      bind = CTRL ALT SHIFT, left, movetoworkspace, e-1
+      # Relative workspace switching (dynamically creates new workspaces)
+      bind = CTRL ALT, right, workspace, +1
+      bind = CTRL ALT, left, workspace, -1
+      bind = CTRL ALT SHIFT, right, movetoworkspace, +1
+      bind = CTRL ALT SHIFT, left, movetoworkspace, -1
 
       # Direct workspace switching (Super + 1-6)
       bind = $mainMod, 1, workspace, 1
@@ -227,27 +255,36 @@ in
       bind = $mainMod SHIFT, 5, movetoworkspace, 5
       bind = $mainMod SHIFT, 6, movetoworkspace, 6
 
-      # Volume control (PipeWire / WirePlumber)
+      # Move all windows to workspace (Super + Ctrl + Shift + 1-6)
+      bind = $mainMod CTRL SHIFT, 1, exec, hypr-move-all 1
+      bind = $mainMod CTRL SHIFT, 2, exec, hypr-move-all 2
+      bind = $mainMod CTRL SHIFT, 3, exec, hypr-move-all 3
+      bind = $mainMod CTRL SHIFT, 4, exec, hypr-move-all 4
+      bind = $mainMod CTRL SHIFT, 5, exec, hypr-move-all 5
+      bind = $mainMod CTRL SHIFT, 6, exec, hypr-move-all 6
+
+      # Audio and brightness controls
       bindel = , XF86AudioRaiseVolume, exec, wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+
       bindel = , XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
-      bindl  = , XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+      bindl  = , XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
       bindl  = , XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
-
-      # Screen brightness control
       bindel = , XF86MonBrightnessUp, exec, brightnessctl set 5%+
       bindel = , XF86MonBrightnessDown, exec, brightnessctl set 5%-
-
-      # Media playback controls
-      bindl = , XF86AudioPlay, exec, playerctl play-pause
-      bindl = , XF86AudioNext, exec, playerctl next
-      bindl = , XF86AudioPrev, exec, playerctl previous
+      bindl  = , XF86AudioPlay, exec, playerctl play-pause
+      bindl  = , XF86AudioNext, exec, playerctl next
+      bindl  = , XF86AudioPrev, exec, playerctl previous
 
       # Smart Airplane mode toggle (rfkill + NetworkManager sync)
       bindl = , XF86RFKill, exec, sh -c "if rfkill list | grep -q 'Soft blocked: yes'; then rfkill unblock all && nmcli radio all on; else rfkill block all; fi"
 
-      # Mouse move & resize
+      # Mouse window drag & resize
       bindm = $mainMod, mouse:272, movewindow
       bindm = $mainMod, mouse:273, resizewindow
+    '';
+
+    # Kitty base configuration (disables paste confirmation dialog)
+    environment.etc."xdg/kitty/kitty.conf".text = ''
+      paste_actions quote-urls-at-prompt,replace-dangerous-control-codes
     '';
   };
 }
