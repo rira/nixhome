@@ -202,9 +202,6 @@ in
       # Keybindings (Super = Windows key)
       $mainMod = SUPER
 
-      # Window switcher menu (Alt + Tab)
-      bind = ALT, Tab, exec, rofi -show window
-
       # Screenshot to clipboard
       bind = $mainMod SHIFT, S, exec, grim -g "$(slurp)" - | wl-copy --type image/png
 
