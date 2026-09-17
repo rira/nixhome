@@ -25,4 +25,22 @@
     enable = true;
     user = "natasha";
   };
+
+  # QEMU test VM overrides (only applies to `nixos-rebuild build-vm`)
+  virtualisation.vmVariant = {
+    virtualisation = {
+      memorySize = 4096;
+      cores = 4;
+      qemu.options = [
+        "-vga"
+        "none"
+        "-device"
+        "virtio-vga-gl"
+        "-display"
+        "sdl,gl=on"
+        "-serial"
+        "null"
+      ];
+    };
+  };
 }
