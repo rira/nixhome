@@ -47,7 +47,8 @@ in
           "bluetooth",
           "battery",
           "network",
-          "tray"
+          "tray",
+          "custom/suspend"
         ],
 
         "hyprland/workspaces": {
@@ -122,6 +123,13 @@ in
 
         "tray": {
           "spacing": 10
+        },
+
+        "custom/suspend": {
+          "format": "⏾",
+          "tooltip": true,
+          "tooltip-format": "Suspend system",
+          "on-click": "systemctl suspend"
         }
       }
     '';
@@ -161,12 +169,18 @@ in
       #bluetooth,
       #battery,
       #network,
-      #tray {
+      #tray,
+      #custom-suspend {
         padding: 2px 10px;
         margin: 4px 2px;
         border-radius: 6px;
         background-color: #313244;
         color: #cdd6f4;
+      }
+
+      #custom-suspend:hover {
+        background-color: #45475a;
+        color: #89b4fa;
       }
 
       #bluetooth.disabled {

@@ -9,19 +9,33 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # Snabb och automatisk laddning av Nix-flakemiljöer per katalog
+    # Allow execution of unpatched dynamic binaries (agy, language servers, etc.)
+    programs.nix-ld = {
+      enable = true;
+      libraries = with pkgs; [
+        stdenv.cc.cc.lib
+        zlib
+        openssl
+        curl
+        glibc
+        libxcrypt-legacy
+      ];
+    };
+
+    # Fast and automatic per-directory Nix flake environment loading
     programs.direnv = {
       enable = true;
       nix-direnv.enable = true;
     };
 
-    # Utvecklingsverktyg och CLI-hjälpmedel
+    # Development tools, editor, and CLI utilities
     environment.systemPackages = with pkgs; [
       gh
       ripgrep
       fd
       tree
       neovim
+      zed-editor
       gnumake
       gcc
     ];
