@@ -29,6 +29,13 @@
   };
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.extraModprobeConfig = ''
+    options cfg80211 ieee80211_regdom=SE
+  '';
+
+  environment.systemPackages = with pkgs; [
+    iw
+  ];
 
   # Primary workstation user
   users.users.richard = {
