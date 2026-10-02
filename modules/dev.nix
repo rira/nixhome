@@ -39,5 +39,27 @@ in
       gnumake
       gcc
     ];
+
+    # Daily automated update check for Antigravity CLI
+    systemd.user.services.agy-update = {
+      description = "Update Antigravity CLI (agy)";
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = pkgs.writeShellScript "agy-update" ''
+          if [ -x "$HOME/.local/bin/agy" ]; then
+            "$HOME/.local/bin/agy" update
+          fi
+        '';
+      };
+    };
+
+    systemd.user.timers.agy-update = {
+      description = "Daily update timer for agy";
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnCalendar = "daily";
+        Persistent = true;
+      };
+    };
   };
 }
