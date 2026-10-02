@@ -248,6 +248,8 @@ in
       trayscale
       nh
       alsa-utils
+      unzip
+      zip
     ];
 
     system.stateVersion = "24.11";
