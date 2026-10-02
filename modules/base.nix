@@ -165,6 +165,7 @@ in
       histSize = 10000;
       shellAliases = {
         g = "git";
+        nix-upgrade = "nh os switch github:rira/nixhome#${hostName}";
       };
       setOptions = [
         "HIST_IGNORE_ALL_DUPS"
