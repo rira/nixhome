@@ -61,5 +61,10 @@ in
         Persistent = true;
       };
     };
+
+    # Shell aliases for development environment
+    programs.zsh.shellAliases = {
+      cdp = "cd /home/richard/projects";
+    };
   };
 }
