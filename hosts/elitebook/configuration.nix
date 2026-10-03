@@ -65,4 +65,9 @@
   };
 
   services.fprintd.enable = true;
+
+  # Host-specific shell navigation for local flake repository
+  programs.zsh.shellAliases = {
+    cdn = "cd ~/nixhome";
+  };
 }
