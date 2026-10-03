@@ -165,7 +165,7 @@ in
       histSize = 10000;
       shellAliases = {
         g = "git";
-        nix-upgrade = "nh os switch github:rira/nixhome#${hostName}";
+        nix-upgrade = "nh os switch --refresh github:rira/nixhome#${hostName}";
         cdd = "mkdir -p ~/Downloads && cd ~/Downloads";
       };
       setOptions = [
