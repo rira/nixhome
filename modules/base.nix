@@ -166,6 +166,7 @@ in
       shellAliases = {
         g = "git";
         nix-upgrade = "nh os switch github:rira/nixhome#${hostName}";
+        cdd = "mkdir -p ~/Downloads && cd ~/Downloads";
       };
       setOptions = [
         "HIST_IGNORE_ALL_DUPS"
