@@ -28,6 +28,12 @@ in
       nix-direnv.enable = true;
     };
 
+    # Java development kit (Eclipse Temurin 25)
+    programs.java = {
+      enable = true;
+      package = pkgs.temurin-bin-25;
+    };
+
     # Development tools, editor, and CLI utilities
     environment.systemPackages = with pkgs; [
       gh
@@ -62,9 +68,18 @@ in
       };
     };
 
-    # Shell aliases for development environment
-    programs.zsh.shellAliases = {
-      cdp = "cd /home/richard/projects";
+    environment.sessionVariables = {
+      JAVA_HOME = "${pkgs.temurin-bin-25}";
+    };
+
+    # Shell aliases and environment for development
+    programs.zsh = {
+      shellAliases = {
+        cdp = "cd /home/richard/projects";
+      };
+      shellInit = ''
+        export JAVA_HOME="${pkgs.temurin-bin-25}"
+      '';
     };
   };
 }
