@@ -35,6 +35,8 @@
 
   environment.systemPackages = with pkgs; [
     iw
+    docker-client
+    docker-compose
   ];
 
   # Primary workstation user
