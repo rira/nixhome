@@ -60,10 +60,10 @@ in
 
     # Power management / Clamshell mode
     # Suspend on lid close only when untethered; stay awake when docked or external power is attached
-    services.logind = {
-      lidSwitch = "suspend";
-      lidSwitchDocked = "ignore";
-      lidSwitchExternalPower = "ignore";
+    services.logind.settings.Login = {
+      HandleLidSwitch = "suspend";
+      HandleLidSwitchDocked = "ignore";
+      HandleLidSwitchExternalPower = "ignore";
     };
 
     # Enable wake-from-sleep for all USB devices and hub controllers (Thunderbolt dock wake)
