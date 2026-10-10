@@ -44,6 +44,8 @@ in
       zed-editor
       gnumake
       gcc
+      maven
+      mvnd
     ];
 
     # Daily automated update check for Antigravity CLI
