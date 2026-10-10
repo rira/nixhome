@@ -176,6 +176,30 @@ in
         "INC_APPEND_HISTORY"
         "SHARE_HISTORY"
       ];
+      interactiveShellInit = ''
+        # Word navigation with Ctrl / Alt / Shift + Left / Right
+        bindkey '^[[1;5D' backward-word      # Ctrl + Left
+        bindkey '^[[1;5C' forward-word       # Ctrl + Right
+        bindkey '^[[1;3D' backward-word      # Alt + Left
+        bindkey '^[[1;3C' forward-word       # Alt + Right
+        bindkey '^[[1;2D' backward-word      # Shift + Left
+        bindkey '^[[1;2C' forward-word       # Shift + Right
+
+        # Terminal / tmux variants
+        bindkey '^[[5D'   backward-word      # Ctrl + Left
+        bindkey '^[[5C'   forward-word       # Ctrl + Right
+        bindkey '^[[3D'   backward-word      # Alt + Left
+        bindkey '^[[3C'   forward-word       # Alt + Right
+        bindkey '^[^[[D'  backward-word      # Alt + Left
+        bindkey '^[^[[C'  forward-word       # Alt + Right
+        bindkey '^[b'     backward-word      # Esc/Alt + b
+        bindkey '^[f'     forward-word       # Esc/Alt + f
+
+        # Word deletion with Ctrl / Alt + Backspace and Delete
+        bindkey '^H'      backward-kill-word # Ctrl + Backspace
+        bindkey '^[[3;5~' kill-word          # Ctrl + Delete
+        bindkey '^[^?'    backward-kill-word # Alt + Backspace
+      '';
     };
 
     # Global Git configuration
