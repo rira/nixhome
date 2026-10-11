@@ -35,9 +35,10 @@
 
   environment.systemPackages = with pkgs; [
     iw
-    docker-client
     docker-compose
   ];
+
+  virtualisation.docker.enable = true;
 
   # Primary workstation user
   users.users.richard = {
@@ -50,6 +51,7 @@
       "video"
       "audio"
       "input"
+      "docker"
     ];
     shell = pkgs.zsh;
     openssh.authorizedKeys.keys = [
