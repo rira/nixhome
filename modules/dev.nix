@@ -40,6 +40,7 @@ in
       ripgrep
       fd
       tree
+      fzf
       neovim
       zed-editor
       gnumake
