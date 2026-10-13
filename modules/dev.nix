@@ -47,6 +47,8 @@ in
       gcc
       maven
       mvnd
+      mkcert
+      openssl
     ];
 
     # Daily automated update check for Antigravity CLI
